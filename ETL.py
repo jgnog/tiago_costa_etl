@@ -14,9 +14,9 @@ class Data_Etl:
     def load_data(self, table_name):
         """
         Loads data from a CSV file and ensures proper data types.
-        Dynamically parses any column with 'date' in its name as datetime,
-        attempts to cast numeric-looking columns to floats, and all other columns to strings,
-        while ignoring null values and ensuring non-numeric columns (e.g., names, mixed alphanumerics) stay as strings.
+        Parses any column with 'date' in the name as type datetime,
+        Cast numeric columns to floats, and all other columns to strings,
+        ignoring null values and ensuring non-numeric columns (e.g., names, mixed alphanumerics) stay as strings.
         """
         
         file_path = f'{self.path_data}/{table_name}'
@@ -29,7 +29,7 @@ class Data_Etl:
         # Verify is exist any alpha in  the column, if yes, convert to string
         def contains_alpha(val):
             if isinstance(val, str):
-                return bool(re.search(r'[a-zA-Z]', val))  # Verifica se há letras
+                return bool(re.search(r'[a-zA-Z]', val))  # verify if exist letters
             return False
 
         for col in df.columns:
