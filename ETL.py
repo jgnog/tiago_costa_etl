@@ -9,8 +9,9 @@ class Data_Etl:
     def __init__(self, path_data, postgres_db):
         self.path_data = path_data
         self.engine = create_engine(postgres_db)
-        
 
+    # Penso que esta função é responsável por demasiada coisa
+    # Devias delegar todas as transformações noutros métodos da classe.
     def load_data(self, table_name):
         """
         Loads data from a CSV file and ensures proper data types.
@@ -18,7 +19,6 @@ class Data_Etl:
         Cast numeric columns to floats, and all other columns to strings,
         ignoring null values and ensuring non-numeric columns (e.g., names, mixed alphanumerics) stay as strings.
         """
-        
         file_path = f'{self.path_data}/{table_name}'
         df = pd.read_csv(file_path)
 
@@ -105,6 +105,20 @@ class Data_Etl:
         print(f"Data loaded into {table_name} table in PostgreSQL")
 
 
+# Estes caminhos deviam ser relativos, para poderem funcionar noutras máquinas
+# Por exemplo, se a estrutura for a seguinte
+# ETL
+#   |- ETL.py
+#   |- README.md
+#   |- SQL_Queries_Postgres.sql
+#   |- .env
+#   |- data/
+#       |- score_csv/
+#           |- table_name1.csv
+#           |- table_name2.csv
+# 
+# Basta definir o caminho como "data/score_csv" e ".env"
+
 path_data = r"C:\Users\tiago.costa\football-data-engineering\Data\Score_csv"
 
 load_dotenv(r"C:\Users\tiago.costa\OneDrive - Salsajeans\Desktop\ETL\.env")
@@ -115,12 +129,25 @@ host = os.getenv('host')
 port = os.getenv('port')
 database = os.getenv('database')
 
+# Um nome melhor para esta variável seria database_connection_string ou db_conn_string
 database_url = f'postgresql://{username}:{password}@{host}:{port}/{database}'
 etl = Data_Etl(path_data, database_url)
 
 
 try:
-    df_appearances = etl.load_data('appearances.csv')  
+    # Se estás a fazer a mesma coisa para todas as tabelas, faz sentido usar
+    # um ciclo `for` para lidar com isto, em vez de repetir todo o código.
+    # Algo como:
+
+    # csv_files = ['appearances.csv', 'club_games.csv']
+    # for csvf in csv_files:
+    #     df = etl.load_data(csvf)  
+    #     df = etl.clean_special_characters(df)
+    #     df = etl.replaceNA(df)
+    #     etl.load_to_postgres(df, csvf) # aqui terias que manipular um pouco o nome do CSV para retirar a extensão .csv e adicionar o sufixo _t
+    #     print(f'{csvf} was transformed and load  to postgres')
+
+    df_appearances = etl.load_data('appearances.csv')
     df_appearances = etl.clean_special_characters(df_appearances)
     df_appearances = etl.replaceNA(df_appearances)
     etl.load_to_postgres(df_appearances, 'appearances_t')
@@ -181,6 +208,10 @@ try:
     etl.load_to_postgres(df_transfers, 'transfers_t')
     print('df_transfers was transformed and load to postgres')
 
+# Não é boa prática apanhar todas as Exceptions possíveis.
+# Faz sentido usar try...except quando sabemos que pode ocorrer uma Exception
+# específica e queremos lidar com ela dentro do código. Fora isso, devemos
+# deixar as Exceptions ocorrer naturalmente.
 except Exception as e:
      print(e)
 
